@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff69e4df8fd1bc042bb9912d64535791, type: 3}
+  m_Name: PenID
+  m_EditorClassIdentifier: 
+  characterName: Pen
+  playerPhysic: {fileID: 0}
+  mass: 1
+  drag: 0
+  speed: 200
+  jumpPower: 7
+  damage: 0
+  idle: {fileID: 0}
+  walk: {fileID: 0}
+  jump: {fileID: 0}
+  punch: {fileID: 0}
+  kick: {fileID: 0}
