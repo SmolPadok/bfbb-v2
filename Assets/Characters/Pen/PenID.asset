@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Name: PenID
   m_EditorClassIdentifier: 
   characterName: Pen
-  playerPhysic: {fileID: 0}
+  playerPhysic: {fileID: 13400000, guid: 50156e691990a4e749b22cd2716fe4b1, type: 2}
   mass: 1
   drag: 0
   speed: 1200
-  jumpPower: 30
+  jumpPower: 32
   damage: 0
   idle: {fileID: 0}
   walk: {fileID: 0}

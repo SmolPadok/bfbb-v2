@@ -137,6 +137,16 @@ public class Player_Controller : MonoBehaviour {
 
 	}
 
+    private void OnTriggerEnter(Collider c){
+
+        if(c.gameObject.tag == "AttackTrigger"){
+
+            anim.SetTrigger("Hurt");
+
+        }
+
+    }
+
     public void LimitMoveOnAttack(){
 
         limitMove = true;
