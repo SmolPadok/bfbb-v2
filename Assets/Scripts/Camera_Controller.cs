@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-//using EZCameraShake;
+using EZCameraShake;
 
 public class Camera_Controller : MonoBehaviour {
 
@@ -32,7 +32,6 @@ public class Camera_Controller : MonoBehaviour {
 	}
 
 	void Move(){
-
 
 		Vector3 centerPoint = GetCenterPoint();
 		Vector3 newPosition = centerPoint + offset;
@@ -75,6 +74,18 @@ public class Camera_Controller : MonoBehaviour {
 	public void ZoomSpecial(){
 
 		transform.position = new Vector3 (transform.position.x, transform.position.y, transform.position.z + 3f);
+
+	}
+
+	public void SmolShake(){
+
+		CameraShaker.GetInstance("Cam").ShakeOnce(1f, 3f, 0f, 0.5f);
+
+	}
+	
+	public void BigShaq(){
+
+		CameraShaker.GetInstance("Cam").ShakeOnce(2f, 3f, 0f, 3f);
 
 	}
 }

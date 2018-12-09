@@ -15,12 +15,17 @@ public class Character_ID : ScriptableObject {
 	[Header("Movement")]
 	public float speed = 0f;
 	public float jumpPower = 0f;
+	public float dashPower = 0f;
+	public float dashPeriod = 0f;
+	public float divePower = 0f;
 
 	[Header("Damage")]
 	public float damage = 0f;
 
+	[Header("Attack Trigger")]
+	public Vector3 TriggerPosition;
+
 	[Header("Animations")]
-	public AnimationClip idle = null;
-	public AnimationClip walk = null, jump = null, punch = null, kick = null;
+	public RuntimeAnimatorController animatorController = null;
 
 }

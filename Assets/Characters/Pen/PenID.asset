@@ -15,11 +15,11 @@ MonoBehaviour:
   playerPhysic: {fileID: 13400000, guid: 50156e691990a4e749b22cd2716fe4b1, type: 2}
   mass: 1
   drag: 0
-  speed: 1200
-  jumpPower: 32
+  speed: 500
+  jumpPower: 24
+  dashPower: 3
+  dashPeriod: 0.2
+  divePower: 24
   damage: 0
-  idle: {fileID: 0}
-  walk: {fileID: 0}
-  jump: {fileID: 0}
-  punch: {fileID: 0}
-  kick: {fileID: 0}
+  TriggerPosition: {x: 2, y: 4, z: 0}
+  animatorController: {fileID: 9100000, guid: 41c6a53bda209e445bbcc6306e1add85, type: 2}
