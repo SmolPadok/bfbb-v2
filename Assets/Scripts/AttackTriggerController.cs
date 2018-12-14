@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class AttackTriggerController : MonoBehaviour {
 
+	GameObject player;
 	GameObject parent;
 	Player_Controller playerControl;
 	BoxCollider collide;
@@ -12,17 +13,24 @@ public class AttackTriggerController : MonoBehaviour {
 	float comboTime;
 	public float comboSetTime;
 
-	bool flipped;
+	public bool flipped;
 	public bool heavy;
+
+	Transform effectStash;
+	GameObject lightSmash, heavySmash;
 
 
 	// Use this for initialization
 	void Start () {
 		
-		parent = transform.parent.gameObject;
-		playerControl = parent.GetComponent<Player_Controller>();
+		player = transform.parent.gameObject;
+		parent = GameObject.Find("GameObjects");
+		playerControl = player.GetComponent<Player_Controller>();
 		collide = GetComponent<BoxCollider>();
 		colliderPosition = playerControl.characterID.TriggerPosition;
+		effectStash = parent.transform.Find("EffectsStash").transform;
+		lightSmash = parent.transform.Find("LightSmash").gameObject;
+		heavySmash = parent.transform.Find("HeavySmash").gameObject;
 
 	}
 	
@@ -44,12 +52,16 @@ public class AttackTriggerController : MonoBehaviour {
 
 	void OnTriggerEnter(Collider c){
 
+		Vector3 spawnPos = player.transform.position + collide.center;
+
 		if(c.gameObject.tag == "Player"){
 
 			if(heavy){
-			Debug.Log("HEAVY OOF");
+				GameObject HeavySmash = Instantiate(heavySmash, spawnPos, Quaternion.identity, effectStash);
+				HeavySmash.SetActive(true);
 			}else{
-			Debug.Log("OOF");
+				GameObject LightSmash = Instantiate(lightSmash, spawnPos, Quaternion.identity, effectStash);
+				LightSmash.SetActive(true);
 			}
 
 		}

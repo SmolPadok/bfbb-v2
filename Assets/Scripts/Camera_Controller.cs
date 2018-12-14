@@ -12,6 +12,11 @@ public class Camera_Controller : MonoBehaviour {
 
 	private Vector3 velocity;
 
+	[Header("Shake Parameters")]
+
+	public float lightMagnitude;
+	public float heavyMagnitude, roughness, fadeIn, fadeOut;
+
 	void Start(){
 
 	}
@@ -48,7 +53,15 @@ public class Camera_Controller : MonoBehaviour {
 		
 		}
 
-		return bounds.size.x;
+		float selectBigger = 0f;
+
+		if(bounds.size.x > bounds.size.y){
+			selectBigger = bounds.size.x;
+		}else{
+			selectBigger = bounds.size.y;
+		}
+
+		return selectBigger;
 
 	}
 
@@ -79,13 +92,13 @@ public class Camera_Controller : MonoBehaviour {
 
 	public void SmolShake(){
 
-		CameraShaker.GetInstance("Cam").ShakeOnce(1f, 3f, 0f, 0.5f);
+		CameraShaker.GetInstance("Cam").ShakeOnce(lightMagnitude, roughness, fadeIn, fadeOut);
 
 	}
 	
 	public void BigShaq(){
 
-		CameraShaker.GetInstance("Cam").ShakeOnce(2f, 3f, 0f, 3f);
+		CameraShaker.GetInstance("Cam").ShakeOnce(heavyMagnitude, roughness, fadeIn, fadeOut);
 
 	}
 }

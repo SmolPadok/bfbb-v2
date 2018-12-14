@@ -15,7 +15,7 @@ MonoBehaviour:
   playerPhysic: {fileID: 13400000, guid: 50156e691990a4e749b22cd2716fe4b1, type: 2}
   mass: 1
   drag: 0
-  speed: 500
+  speed: 250
   jumpPower: 24
   dashPower: 3
   dashPeriod: 0.2

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Player_Controller : MonoBehaviour {
 
-    GameObject manager;
+    GameManager manager;
     public int playerNumber;
 	public Character_ID characterID;
     public float limitMoveOnAttack;
@@ -12,11 +12,15 @@ public class Player_Controller : MonoBehaviour {
     float doubleKeyTime = 0;
     int axisPresses;
     GameObject attackTrigger;
+    public GameObject stat, indicator;
     BoxCollider trigger;
-    GameObject parent, dashParticle, diveParticle, impactParticle;
-    Transform effectStash;
-    GameObject stat;
+    GameObject parent, dashParticle, diveParticle, impactParticle, lavaSplash;
+    public GameObject deathConfetti;
+    public Transform effectStash;
     Camera_Controller cam;
+    float knockback = 20;
+    float stunChance;
+    public float damage = 0;
 
 	bool jumped;
     bool dived;
@@ -36,7 +40,7 @@ public class Player_Controller : MonoBehaviour {
 
 	void Awake () {
 		
-        manager = GameObject.Find("GameManager");
+        manager = GameObject.Find("GameManager").GetComponent<GameManager>();
         cam = GameObject.Find("Main Camera").GetComponent<Camera_Controller>();
 		rb = GetComponent<Rigidbody>();
 		playerCollider = GetComponent<CapsuleCollider>();
@@ -49,15 +53,21 @@ public class Player_Controller : MonoBehaviour {
         dashParticle = parent.transform.Find("DashSmoke").gameObject;
         diveParticle = parent.transform.Find("DiveSmoke").gameObject;
         impactParticle = parent.transform.Find("ImpactDebris").gameObject;
+        lavaSplash = parent.transform.Find("LavaSplash").gameObject;
+        deathConfetti = parent.transform.Find("DeathConfetti").gameObject;
 
-        if(gameObject.name == "Player 1"){
-            stat = GameObject.Find("Stats1");
-        }else if (gameObject.name == "Player 2"){
-            stat = GameObject.Find("Stats2");
-        }else if (gameObject.name == "Player 3"){
-            stat = GameObject.Find("Stats3");
-        }else if (gameObject.name == "Player 4"){
-            stat = GameObject.Find("Stats4");
+        if(playerNumber == 1){
+		stat = GameObject.Find("Stats1");
+        indicator = GameObject.Find("Indicator1");
+        }else if(playerNumber == 2){
+		stat = GameObject.Find("Stats2");
+        indicator = GameObject.Find("Indicator2");
+        }else if(playerNumber == 3){
+		stat = GameObject.Find("Stats3");
+        indicator = GameObject.Find("Indicator3");
+        }else if(playerNumber == 4){
+		stat = GameObject.Find("Stats4");
+        indicator = GameObject.Find("Indicator4");
         }
 
 	}
@@ -148,16 +158,16 @@ public class Player_Controller : MonoBehaviour {
 
         //--------------------------
 
-        if (Input.GetButtonDown("Punch"))
+        if (Input.GetButtonDown("Attack"))
         {
-            Punch();
+            Attack();
         }
 
         //--------------------------
 
-        if (Input.GetButtonDown("Kick"))
+        if (Input.GetButtonDown("Special"))
         {
-            Kick();
+            Special();
         }
 
         if(Input.GetAxisRaw("Vertical") < 0){
@@ -166,19 +176,24 @@ public class Player_Controller : MonoBehaviour {
 
         }
 
+
+
 	}
 
 	void FixedUpdate () {
 
+        if(mobility){
 		Move();
+        }
+        
 
 	}
 
 	void Move(){
 
-        Vector3 yVelFix = new Vector3(0, rb.velocity.y, 0);
+        Vector3 VelFix = new Vector3(rb.velocity.x / 2, rb.velocity.y, 0f);
         rb.velocity = moveDirection * characterID.speed * Time.deltaTime;
-        rb.velocity += yVelFix;
+        rb.velocity += VelFix;
 
 	}
 
@@ -193,16 +208,16 @@ public class Player_Controller : MonoBehaviour {
 
 	}
 
-    void Punch(){
+    void Attack(){
 
-        anim.SetTrigger("Punch");
+        anim.SetTrigger("Attack");
 
     }
 
-    void Kick()
+    void Special()
     {
 
-        anim.SetTrigger("Kick");
+        anim.SetTrigger("Special");
 
     }
 
@@ -239,13 +254,22 @@ public class Player_Controller : MonoBehaviour {
         if(c.gameObject.tag == "AttackTrigger"){
 
             bool heaviness = c.gameObject.GetComponent<AttackTriggerController>().heavy;
-            Hurt(heaviness);
+            bool flipped = c.gameObject.GetComponent<AttackTriggerController>().flipped;
+            float velX = c.transform.parent.GetComponent<Rigidbody>().velocity.x;
+            float velY = c.transform.parent.GetComponent<Rigidbody>().velocity.y;
+            int hitPlayer = c.transform.parent.GetComponent<Player_Controller>().playerNumber;
+            Hurt(heaviness, flipped, velX, velY, hitPlayer);
 
         }
         
         if(c.gameObject.tag == "Hazard"){
 
             Debug.Log("Ouch! A hazard!");
+            GameObject LavaSplash = Instantiate(lavaSplash, transform.position, lavaSplash.transform.rotation, effectStash);
+            LavaSplash.SetActive(true);
+
+            manager.HazardDeath(this);
+            gameObject.SetActive(false);
 
         }
 
@@ -303,14 +327,54 @@ public class Player_Controller : MonoBehaviour {
 
     }
 
-    void Hurt(bool heavy){
+    void Hurt(bool heavy, bool flipped, float velX, float velY, int attackingPlayerNumber){
+
+        float damageDone = damage / 50;
+        float multiplyBySpeed = (Mathf.Abs(velX) + Mathf.Abs(velY) / 2) / 10;
+        Debug.Log("This is Player " + attackingPlayerNumber + " attacking Player " + playerNumber + ". Damage done = " + damageDone + ", Multiply by speed: " + multiplyBySpeed);
 
         if(!heavy){
         cam.SmolShake();
+        damage += (1f + multiplyBySpeed);
+        stunChance = 1;
         }else{
         cam.BigShaq();
+        damage += (2f + multiplyBySpeed);
+        stunChance = 30;
         }
-        anim.SetTrigger("Hurt");
+
+        if(multiplyBySpeed < 1){
+        if(!heavy){
+            multiplyBySpeed = 0.5f;
+        }else{
+            multiplyBySpeed = 1f;
+        }
+        }
+
+        stunChance += multiplyBySpeed + (damage / 10);
+
+        if(!jumped){
+        float randomizeStun = Random.Range(0,100);
+        if(randomizeStun <= stunChance){
+            anim.SetBool("Grounded", false);
+            anim.SetTrigger("Stun");
+            mobility = false;
+        }else{
+            anim.SetTrigger("Hurt");
+        }
+        }else{
+            anim.SetBool("Grounded", false);
+            anim.SetTrigger("Stun");
+            mobility = false;
+        }
+
+        if(flipped){
+            rb.AddForce(new Vector3(1f,0.5f,0f) * knockback * damageDone * multiplyBySpeed, ForceMode.Impulse);
+        }else{
+            rb.AddForce(new Vector3(-1f,0.5f,0f) * knockback * damageDone * multiplyBySpeed, ForceMode.Impulse);
+        }
+
+        manager.UpdateDamage(playerNumber);
 
     }
 
