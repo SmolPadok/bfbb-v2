@@ -35924,7 +35924,7 @@ MeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9d8cc0e29172f4e718eabc0a88835d88, type: 2}
+  - {fileID: 2100000, guid: d71754c8093db422c8aa370826970766, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -40916,7 +40916,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1679759911478276}
   m_LocalRotation: {x: 0.7446784, y: 0.30542335, z: 0.22518979, w: 0.54905397}
-  m_LocalPosition: {x: 7.91, y: -7.92, z: -1.62}
+  m_LocalPosition: {x: 4.48, y: -4.44, z: -0.11}
   m_LocalScale: {x: 1.1904762, y: 1.1904764, z: 1.1904765}
   m_Children: []
   m_Father: {fileID: 4044170238450194}
@@ -41174,7 +41174,7 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 2
+      scalar: 4
       minScalar: 1
       maxCurve:
         serializedVersion: 2
@@ -41919,7 +41919,7 @@ ParticleSystem:
       repeatInterval: 0.1
       probability: 1
   SizeModule:
-    enabled: 0
+    enabled: 1
     curve:
       serializedVersion: 2
       minMaxState: 1
@@ -41930,21 +41930,21 @@ ParticleSystem:
         m_Curve:
         - serializedVersion: 3
           time: 0
-          value: 0
+          value: 1
           inSlope: 0
-          outSlope: 1
+          outSlope: 0
           tangentMode: 0
           weightedMode: 0
           inWeight: 0.33333334
           outWeight: 0.33333334
         - serializedVersion: 3
           time: 1
-          value: 1
-          inSlope: 1
-          outSlope: 0
+          value: 0
+          inSlope: -3.3231914
+          outSlope: -3.3231914
           tangentMode: 0
           weightedMode: 0
-          inWeight: 0.33333334
+          inWeight: 0.022872984
           outWeight: 0.33333334
         m_PreInfinity: 2
         m_PostInfinity: 2
@@ -42275,7 +42275,7 @@ ParticleSystem:
         atime5: 0
         atime6: 0
         atime7: 0
-        m_Mode: 0
+        m_Mode: 1
         m_NumColorKeys: 2
         m_NumAlphaKeys: 2
       minGradient:
@@ -45623,7 +45623,7 @@ ParticleSystemRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_RenderMode: 1
+  m_RenderMode: 0
   m_SortMode: 0
   m_MinParticleSize: 0
   m_MaxParticleSize: 0.5
@@ -56119,6 +56119,7 @@ GameObject:
   - component: {fileID: 33764205418399808}
   - component: {fileID: 23157163425022312}
   - component: {fileID: 65708282407270518}
+  - component: {fileID: 1544838073}
   m_Layer: 0
   m_Name: Lava
   m_TagString: Hazard
@@ -56201,6 +56202,25 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1.0422856, y: 0.30275092, z: 0.923459}
   m_Center: {x: -0.0004168051, y: -0.3486241, z: -0.00043196508}
+--- !u!95 &1544838073
+Animator:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1956693523633046}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 66f949fe4b38845bd9bc6d078d49fe5c, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!1 &1962062862126822
 GameObject:
   m_ObjectHideFlags: 0

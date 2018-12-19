@@ -15,7 +15,7 @@ public class Camera_Controller : MonoBehaviour {
 	[Header("Shake Parameters")]
 
 	public float lightMagnitude;
-	public float heavyMagnitude, roughness, fadeIn, fadeOut;
+	public float heavyMagnitude, deathMagnitude, roughness, fadeIn, fadeOut;
 
 	void Start(){
 
@@ -99,6 +99,12 @@ public class Camera_Controller : MonoBehaviour {
 	public void BigShaq(){
 
 		CameraShaker.GetInstance("Cam").ShakeOnce(heavyMagnitude, roughness, fadeIn, fadeOut);
+
+	}
+
+	public void DeathShake(){
+
+		CameraShaker.GetInstance("Cam").ShakeOnce(deathMagnitude, roughness, fadeIn, fadeOut);
 
 	}
 }

@@ -113,7 +113,7 @@ PlayerSettings:
     16:10: 0
     16:9: 1
     Others: 0
-  bundleVersion: 0.1
+  bundleVersion: 0.1B
   preloadedAssets:
   - {fileID: 102900000, guid: 193b0bd267e6e4e4887650e4738c554c, type: 3}
   - {fileID: 102900000, guid: d1fccf2e926027c4a84f0e159780a164, type: 3}
@@ -709,7 +709,7 @@ PlayerSettings:
       daydreamIconBackground: {fileID: 0}
   cloudServicesEnabled:
     Build: 0
-    Collab: 1
+    Collab: 0
     ErrorHub: 0
     Hub: 0
     UNet: 1

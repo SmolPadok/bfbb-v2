@@ -8,6 +8,11 @@ TagManager:
   - Recording
   - Transition
   - Hazard
+  - Indicator
+  - Stats
+  - Setup
+  - SetupMemory
+  - OldSetupMemory
   layers:
   - Default
   - TransparentFX

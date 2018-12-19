@@ -27,7 +27,9 @@ public class AttackTriggerController : MonoBehaviour {
 		parent = GameObject.Find("GameObjects");
 		playerControl = player.GetComponent<Player_Controller>();
 		collide = GetComponent<BoxCollider>();
-		colliderPosition = playerControl.characterID.TriggerPosition;
+		colliderPosition = playerControl.characterID.triggerCenter;
+		collide.center = colliderPosition;
+		collide.size = playerControl.characterID.triggerSize;
 		effectStash = parent.transform.Find("EffectsStash").transform;
 		lightSmash = parent.transform.Find("LightSmash").gameObject;
 		heavySmash = parent.transform.Find("HeavySmash").gameObject;
@@ -40,11 +42,11 @@ public class AttackTriggerController : MonoBehaviour {
 		flipped = playerControl.flipped;
 		if(flipped){
 
-			collide.center = new Vector3(colliderPosition.x,colliderPosition.y, colliderPosition.z);
+			collide.center = new Vector3(-colliderPosition.x,colliderPosition.y, colliderPosition.z);
 
 		}else{
 
-			collide.center = new Vector3(-colliderPosition.x, colliderPosition.y, colliderPosition.z);
+			collide.center = new Vector3(colliderPosition.x, colliderPosition.y, colliderPosition.z);
 
 		}
 

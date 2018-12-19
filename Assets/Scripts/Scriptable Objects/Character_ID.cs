@@ -23,9 +23,13 @@ public class Character_ID : ScriptableObject {
 	public float damage = 0f;
 
 	[Header("Attack Trigger")]
-	public Vector3 TriggerPosition;
+	public Vector3 triggerCenter;
+	public Vector3 triggerSize;
 
 	[Header("Animations")]
 	public RuntimeAnimatorController animatorController = null;
+
+	[Header("UI")]
+	public Sprite icon = null;
 
 }

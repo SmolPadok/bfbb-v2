@@ -36,6 +36,8 @@ public class Player_Controller : MonoBehaviour {
 	Vector3 moveDirection;
     Animator anim;
 
+    string[] inputs = {"Horizontal","Vertical","Attack","Special"};
+
 	//FLIPPED = FACING RIGHT
 
 	void Awake () {
@@ -70,6 +72,10 @@ public class Player_Controller : MonoBehaviour {
         indicator = GameObject.Find("Indicator4");
         }
 
+        for (int i = 0; i < inputs.Length; i++)
+        {
+            inputs[i] = inputs[i] + playerNumber.ToString();
+        }
 	}
 
 	void Start(){
@@ -92,7 +98,7 @@ public class Player_Controller : MonoBehaviour {
         //--------------------------
         if(mobility && !debugDisable){
 
-        float horizontalMovement = Input.GetAxis("Horizontal");
+        float horizontalMovement = Input.GetAxis(inputs[0]);
 
         if (limitMove == false)
         {
@@ -105,7 +111,7 @@ public class Player_Controller : MonoBehaviour {
             moveDirection.x = moveDirection.x * characterID.dashPower;
         }
 
-        if(Input.GetButtonDown("Horizontal")){
+        if(Input.GetButtonDown(inputs[0])){
             if(axisPresses == 0){
                 axisPresses = 1;
             }
@@ -152,25 +158,25 @@ public class Player_Controller : MonoBehaviour {
             sprite.flipX = false;
         }
 
-		if (Input.GetAxisRaw("Vertical") > 0){
+		if (Input.GetAxisRaw(inputs[1]) > 0){
 			Jump();
         }
 
         //--------------------------
 
-        if (Input.GetButtonDown("Attack"))
+        if (Input.GetButtonDown(inputs[2]))
         {
             Attack();
         }
 
         //--------------------------
 
-        if (Input.GetButtonDown("Special"))
+        if (Input.GetButtonDown(inputs[3]))
         {
             Special();
         }
 
-        if(Input.GetAxisRaw("Vertical") < 0){
+        if(Input.GetAxisRaw(inputs[1]) < 0){
             Duck();
         }
 
