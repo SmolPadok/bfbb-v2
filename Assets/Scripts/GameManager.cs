@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using System.Linq;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour {
 
@@ -44,10 +45,13 @@ public class GameManager : MonoBehaviour {
 	GameObject[] stats;
 	int[] playerLives = {0, 0, 0, 0};
 	GameObject[] statDamage = new GameObject[4];
+	GameObject[] statLives = new GameObject[4];
 	Player_Controller[] playerControl = new Player_Controller[4];
-	GameObject canvas, playerStats;
+	GameObject canvas, playerStats, commentary, betaEnd;
 	TextMeshProUGUI countdown;
 	GameObject transition, parent;
+	GameObject lifeSprite;
+	bool[] statRecovery = new bool[4];
 
 	// Use this for initialization
 	void Start () {
@@ -66,11 +70,15 @@ public class GameManager : MonoBehaviour {
 		{
 			playerControl[c] = players[c].GetComponent<Player_Controller>();
 			statDamage[c] = stats[c].transform.Find("Damage").gameObject;
+			statLives[c] = stats[c].transform.Find("Lives").gameObject;
 		}
 		canvas = GameObject.Find("Canvas");
 		playerStats = canvas.transform.Find("Stats").gameObject;
 		countdown = canvas.transform.Find("Countdown").GetComponent<TextMeshProUGUI>();
 		transition = GameObject.FindGameObjectWithTag("Transition");
+		lifeSprite = canvas.transform.Find("LifeSprite").gameObject;
+		commentary = canvas.transform.Find("CommentaryPanel").gameObject;
+		betaEnd = canvas.transform.Find("BetaEnd").gameObject;
 
 		RunSetup();
 
@@ -98,6 +106,7 @@ public class GameManager : MonoBehaviour {
 		}
 
 		lerpDamageStat();
+
 		waitForKill();
 
 	}
@@ -115,11 +124,13 @@ public class GameManager : MonoBehaviour {
 			players[i].transform.position = battleSceneID.playerPosition[i];
 			playerLives[i] = setLives;
 		}
+		UpdateLives();
 
 	}
 
 	void StartRound(){
 	
+	betaEnd.SetActive(false);
 	playerStats.SetActive(false);
 	for (int i = 0; i < playerControl.Length; i++)
 	{
@@ -153,14 +164,15 @@ public class GameManager : MonoBehaviour {
 
 		yield return new WaitForSeconds(1f);
 
-		countdown.gameObject.SetActive(false);
+		commentary.GetComponent<Animator>().SetTrigger("End");
+		countdown.gameObject.GetComponent<Animator>().SetTrigger("End");
 
 	}
 
 	void RunSetup(){
 
 		if(setup != null){
-		for (int i = 0; i < playerActive.Length; i++)
+		for (int i = 0; i < players.Length; i++)
 		{
 			playerActive[i] = setup.playerActive[i];
 		}
@@ -230,28 +242,89 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 
-	void EliminatePlayer(Player_Controller refPlayer){
+	void KillPlayer(Player_Controller refPlayer){
 		
-            GameObject smashDeath = Instantiate(refPlayer.deathConfetti, refPlayer.transform.position, Quaternion.identity, refPlayer.effectStash);
-            Vector3 relativePos = parent.transform.position - smashDeath.transform.position;
-            smashDeath.transform.rotation = Quaternion.LookRotation(relativePos);
-            smashDeath.SetActive(true);
-			cam.DeathShake();
+		for (int i = 0; i < players.Length; i++)
+		{
+			if(refPlayer.playerNumber == (i + 1)){
 
-			refPlayer.stat.SetActive(false);
-			refPlayer.indicator.SetActive(false);
+				Debug.Log("Killed Player " + playerControl[i].playerNumber);
+            	GameObject smashDeath = Instantiate(playerControl[i].deathConfetti, playerControl[i].transform.position, Quaternion.identity, playerControl[i].effectStash);
+            	Vector3 relativePos = parent.transform.position - smashDeath.transform.position;
+            	smashDeath.transform.rotation = Quaternion.LookRotation(relativePos);
+            	smashDeath.SetActive(true);
+				cam.DeathShake();
 
-			StartCoroutine(SecondsOfSilence(refPlayer));
+				playerControl[i].indicator.SetActive(false);
+            	players[i].SetActive(false);
+				statRecovery[i] = true;
+				statDamage[i].GetComponent<Animator>().SetTrigger("Recovery");
 
-            refPlayer.gameObject.SetActive(false);
+				playerLives[i] -= 1;
+				UpdateLives();
+				
+				if(playerLives[i] > 0){
+				StartCoroutine(RespawnPlayer(i));
+				StartCoroutine(FancyRecovery(i));
+				}else{
+				StartCoroutine(SecondsOfSilence(i));
+				}
+				break;
+
+			}
+		}
+
+	}
+
+	IEnumerator RespawnPlayer(int index){
+
+		yield return new WaitForSeconds(1f);
+
+		playerDamage[index] = 0;
+		playerControl[index].damage = 0;
+		players[index].transform.position = new Vector3(Random.Range(-25f,25f), 30f, 0f);
+		players[index].GetComponent<Rigidbody>().velocity = Vector3.zero;
+		players[index].SetActive(true);
+		indicators[index].SetActive(true);
+		statRecovery[index] = false;
 
 	}
 	//Pay respects to the dead player
-	IEnumerator SecondsOfSilence(Player_Controller refPlayer){
+	IEnumerator SecondsOfSilence(int index){
 
-		yield return new WaitForSeconds(0.5f);
+		statDamage[index].GetComponent<TextMeshProUGUI>().text = "ERROR";
+		yield return new WaitForSeconds(0.05f);
+		statDamage[index].GetComponent<TextMeshProUGUI>().text = "Connection lost";
+		yield return new WaitForSeconds(0.05f);
+		statDamage[index].GetComponent<TextMeshProUGUI>().text = "Recovery failed";
 
-		RemoveCamTarget(refPlayer.transform);
+		yield return new WaitForSeconds(0.4f);
+
+	    stats[index].SetActive(false);
+		RemoveCamTarget(players[index].transform);
+		if(cam.targets.Count == 1){
+
+			StartCoroutine(EndGame());
+
+		}
+
+	}
+
+	IEnumerator FancyRecovery(int index){
+
+		TextMeshProUGUI damage = statDamage[index].GetComponent<TextMeshProUGUI>();
+
+		damage.text = "ERROR";
+		yield return new WaitForSeconds(0.05f);
+		damage.text = "Connection lost";
+		yield return new WaitForSeconds(0.1f);
+		damage.text = "Executing recovery.";
+		yield return new WaitForSeconds(0.2f);
+		damage.text = "Executing recovery..";
+		yield return new WaitForSeconds(0.2f);
+		damage.text = "Executing recovery...";
+		yield return new WaitForSeconds(0.4f);
+		damage.text = "Online";
 
 	}
 
@@ -265,9 +338,11 @@ public class GameManager : MonoBehaviour {
 		for (int i = 0; i < players.Length; i++)
 		{
 			if(playerActive[i]){
+				if(!statRecovery[i]){
 				playerLerpDamage[i] = Mathf.SmoothDamp(playerLerpDamage[i], playerDamage[i], ref velRef[i], lerpTime);
 				playerLerpDamage[i] = Mathf.Round(playerLerpDamage[i] * 10) / 10;
 				statDamage[i].GetComponent<TextMeshProUGUI>().text = (playerLerpDamage[i]).ToString() + "%";
+				}
 			}
 		}
 	}
@@ -279,18 +354,32 @@ public class GameManager : MonoBehaviour {
 		if(players[i].activeSelf){
         if(playerControl[i].transform.position.x > boundsRight || playerControl[i].transform.position.x < boundsLeft
 		|| playerControl[i].transform.position.y > boundsUp || playerControl[i].transform.position.y < boundsDown){
-            EliminatePlayer(playerControl[i]);
+            KillPlayer(playerControl[i]);
         	}
 		}
 		}
 	}
 
 	void UpdateLives(){
-
+		for (int i = 0; i < playerLives.Length; i++)
+		{
+			for (int x = 0; x < statLives[i].transform.childCount; x++)
+			{
+				Destroy(statLives[i].transform.GetChild(x).gameObject);
+			}
+			for (int y = 0; y < playerLives[i]; y++)
+			{
+				GameObject liveSprite = Instantiate(lifeSprite, Vector3.zero, Quaternion.identity, statLives[i].transform);
+				liveSprite.GetComponent<Image>().sprite = playerControl[i].characterID.icon;
+				liveSprite.GetComponent<Image>().preserveAspect = true;
+				liveSprite.SetActive(true);
+			}
+		}
+		Debug.Log("Removed legacy life sprites");
 	}
 
 	public void HazardDeath(Player_Controller refPlayer){
-		EliminatePlayer(refPlayer);
+		KillPlayer(refPlayer);
 	}
 
 	public void UpdateDamage(int playerIndex){
@@ -303,5 +392,18 @@ public class GameManager : MonoBehaviour {
 				break;
 			}
 		}
+	}
+
+	IEnumerator EndGame(){
+
+		countdown.text = "GAME";
+		countdown.gameObject.GetComponent<Animator>().SetTrigger("Start");
+		commentary.GetComponent<Animator>().SetTrigger("Start");
+		cam.targets[0].GetComponent<Player_Controller>().enabled = false;
+		
+		yield return new WaitForSeconds(1f);
+
+		betaEnd.SetActive(true);
+
 	}
 }
