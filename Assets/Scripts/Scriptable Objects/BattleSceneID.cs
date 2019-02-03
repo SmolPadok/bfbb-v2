@@ -10,4 +10,5 @@ public class BattleSceneID : ScriptableObject
 
     public Vector3[] playerPosition = new Vector3[3];
     public float gravity = -36;
+    public AudioClip music = null;
 }

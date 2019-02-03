@@ -37,6 +37,13 @@ public class GameManager : MonoBehaviour {
 
 	public int setLives;
 
+	[Header("Universal Sounds")]
+
+	public AudioClip[] hitlightSounds;
+	public AudioClip[] hitheavySounds;
+	public AudioClip[] deathSounds;
+	public AudioClip[] recoverySounds;
+
 	float[] playerLerpDamage = new float[4];
 	float[] velRef = new float[4];
 
@@ -48,7 +55,7 @@ public class GameManager : MonoBehaviour {
 	GameObject[] statLives = new GameObject[4];
 	Player_Controller[] playerControl = new Player_Controller[4];
 	GameObject canvas, playerStats, commentary, betaEnd;
-	TextMeshProUGUI countdown;
+	TextMeshProUGUI message;
 	GameObject transition, parent;
 	GameObject lifeSprite;
 	bool[] statRecovery = new bool[4];
@@ -74,7 +81,7 @@ public class GameManager : MonoBehaviour {
 		}
 		canvas = GameObject.Find("Canvas");
 		playerStats = canvas.transform.Find("Stats").gameObject;
-		countdown = canvas.transform.Find("Countdown").GetComponent<TextMeshProUGUI>();
+		message = canvas.transform.Find("Message").GetComponent<TextMeshProUGUI>();
 		transition = GameObject.FindGameObjectWithTag("Transition");
 		lifeSprite = canvas.transform.Find("LifeSprite").gameObject;
 		commentary = canvas.transform.Find("CommentaryPanel").gameObject;
@@ -124,6 +131,13 @@ public class GameManager : MonoBehaviour {
 			players[i].transform.position = battleSceneID.playerPosition[i];
 			playerLives[i] = setLives;
 		}
+		if(battleSceneID.music != null){
+		AudioSource music = cam.gameObject.GetComponent<AudioSource>();
+		music.clip = battleSceneID.music;
+		music.Play();
+		}else{
+		Debug.LogWarning("No background music found.");
+		}
 		UpdateLives();
 
 	}
@@ -145,27 +159,27 @@ public class GameManager : MonoBehaviour {
 	IEnumerator CountdownRound(){
 
 		FocusFirstPlayer();
-		countdown.text = "3";
+		message.text = "3";
 
 		yield return new WaitForSeconds(1f);
 
-		countdown.text = "2";
+		message.text = "2";
 
 		yield return new WaitForSeconds(1f);
 		
-		countdown.text = "1";
+		message.text = "1";
 		FocusAllPlayers();
 		
 		yield return new WaitForSeconds(1f);
 
-		countdown.text = "GO!";
+		message.text = "GO!";
 		playerStats.SetActive(true);
 		EnablePlayers();
 
 		yield return new WaitForSeconds(1f);
 
 		commentary.GetComponent<Animator>().SetTrigger("End");
-		countdown.gameObject.GetComponent<Animator>().SetTrigger("End");
+		message.gameObject.GetComponent<Animator>().SetTrigger("End");
 
 	}
 
@@ -176,6 +190,13 @@ public class GameManager : MonoBehaviour {
 		{
 			playerActive[i] = setup.playerActive[i];
 		}
+		for (int a = 0; a < players.Length; a++){
+
+			playerOr[a] = setup.disableControl[a];
+
+		}
+		setLives = (int)setup.lives;
+
 		}else{
 		Debug.Log("No setup memory found. Using pre-assigned settings.");
 		}
@@ -205,20 +226,6 @@ public class GameManager : MonoBehaviour {
 				break;
 			}
 		}
-		/*
-		if(player1Active){
-		cam.targets.Add(players[0].transform);
-		}else if(player2Active){
-		cam.targets.Add(players[1].transform);
-		}else if(player3Active){
-		cam.targets.Add(players[2].transform);
-		}else if(player4Active){
-		cam.targets.Add(players[3].transform);
-		}else{
-		Debug.LogError("Wait a minute, no active players!");
-		return;
-		}
-		*/
 	}
 
 	void FocusAllPlayers(){
@@ -242,6 +249,24 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 
+	void InvisiblePlayerOnKill(int index){
+		GameObject refPlayer = players[index];
+		playerControl[index].enabled = false;
+		refPlayer.GetComponent<Rigidbody>().isKinematic = true;
+		refPlayer.GetComponent<CapsuleCollider>().enabled = false;
+		refPlayer.GetComponent<Animator>().enabled = false;
+		refPlayer.GetComponent<SpriteRenderer>().enabled = false;
+	}
+	void VisiblePlayerOnRespawn(int index){
+		GameObject refPlayer = players[index];
+		refPlayer.GetComponent<Rigidbody>().isKinematic = false;
+		refPlayer.GetComponent<CapsuleCollider>().enabled = true;
+		refPlayer.GetComponent<SpriteRenderer>().enabled = true;
+		refPlayer.GetComponent<Animator>().enabled = true;
+		playerControl[index].enabled = true;
+		
+	}
+
 	void KillPlayer(Player_Controller refPlayer){
 		
 		for (int i = 0; i < players.Length; i++)
@@ -249,14 +274,16 @@ public class GameManager : MonoBehaviour {
 			if(refPlayer.playerNumber == (i + 1)){
 
 				Debug.Log("Killed Player " + playerControl[i].playerNumber);
+				refPlayer.PlayLocalSound("death", false);
+				PlaySound("death");
             	GameObject smashDeath = Instantiate(playerControl[i].deathConfetti, playerControl[i].transform.position, Quaternion.identity, playerControl[i].effectStash);
             	Vector3 relativePos = parent.transform.position - smashDeath.transform.position;
             	smashDeath.transform.rotation = Quaternion.LookRotation(relativePos);
             	smashDeath.SetActive(true);
 				cam.DeathShake();
+            	InvisiblePlayerOnKill(i);
 
 				playerControl[i].indicator.SetActive(false);
-            	players[i].SetActive(false);
 				statRecovery[i] = true;
 				statDamage[i].GetComponent<Animator>().SetTrigger("Recovery");
 
@@ -265,7 +292,6 @@ public class GameManager : MonoBehaviour {
 				
 				if(playerLives[i] > 0){
 				StartCoroutine(RespawnPlayer(i));
-				StartCoroutine(FancyRecovery(i));
 				}else{
 				StartCoroutine(SecondsOfSilence(i));
 				}
@@ -278,13 +304,14 @@ public class GameManager : MonoBehaviour {
 
 	IEnumerator RespawnPlayer(int index){
 
-		yield return new WaitForSeconds(1f);
+		StartCoroutine(FancyRecovery(index));
+		yield return new WaitForSeconds(2f);
 
 		playerDamage[index] = 0;
 		playerControl[index].damage = 0;
-		players[index].transform.position = new Vector3(Random.Range(-25f,25f), 30f, 0f);
+		players[index].transform.position = new Vector3(Random.Range(-5f,5f), 30f, 0f);
 		players[index].GetComponent<Rigidbody>().velocity = Vector3.zero;
-		players[index].SetActive(true);
+		VisiblePlayerOnRespawn(index);
 		indicators[index].SetActive(true);
 		statRecovery[index] = false;
 
@@ -301,6 +328,7 @@ public class GameManager : MonoBehaviour {
 		yield return new WaitForSeconds(0.4f);
 
 	    stats[index].SetActive(false);
+
 		RemoveCamTarget(players[index].transform);
 		if(cam.targets.Count == 1){
 
@@ -318,12 +346,13 @@ public class GameManager : MonoBehaviour {
 		yield return new WaitForSeconds(0.05f);
 		damage.text = "Connection lost";
 		yield return new WaitForSeconds(0.1f);
+		PlaySound("recovery");
 		damage.text = "Executing recovery.";
 		yield return new WaitForSeconds(0.2f);
 		damage.text = "Executing recovery..";
 		yield return new WaitForSeconds(0.2f);
 		damage.text = "Executing recovery...";
-		yield return new WaitForSeconds(0.4f);
+		yield return new WaitForSeconds(1.4f);
 		damage.text = "Online";
 
 	}
@@ -351,7 +380,7 @@ public class GameManager : MonoBehaviour {
 
 		for (int i = 0; i < players.Length; i++)
 		{
-		if(players[i].activeSelf){
+		if(playerControl[i].enabled){
         if(playerControl[i].transform.position.x > boundsRight || playerControl[i].transform.position.x < boundsLeft
 		|| playerControl[i].transform.position.y > boundsUp || playerControl[i].transform.position.y < boundsDown){
             KillPlayer(playerControl[i]);
@@ -396,8 +425,8 @@ public class GameManager : MonoBehaviour {
 
 	IEnumerator EndGame(){
 
-		countdown.text = "GAME";
-		countdown.gameObject.GetComponent<Animator>().SetTrigger("Start");
+		message.text = "GAME";
+		message.gameObject.GetComponent<Animator>().SetTrigger("Start");
 		commentary.GetComponent<Animator>().SetTrigger("Start");
 		cam.targets[0].GetComponent<Player_Controller>().enabled = false;
 		
@@ -405,5 +434,22 @@ public class GameManager : MonoBehaviour {
 
 		betaEnd.SetActive(true);
 
+	}
+
+	void PlaySound(string type){
+		type = type + "Sounds";
+		AudioClip[] soundType = (AudioClip[])this.GetType().GetField(type).GetValue(this);
+        if(soundType.Length == 0){
+            Debug.LogWarning("Requested soundType is empty. You are looking for: " + type + ". Check if this is the correct type or add some sound files.");
+            return;
+        }else{
+
+            int selectRandom;
+
+            selectRandom = Random.Range(0,soundType.Length);
+
+            AudioClip pickedSound = soundType[selectRandom];
+            cam.gameObject.GetComponent<AudioSource>().PlayOneShot(pickedSound);
+        }
 	}
 }

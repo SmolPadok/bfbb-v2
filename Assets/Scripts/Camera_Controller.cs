@@ -10,6 +10,11 @@ public class Camera_Controller : MonoBehaviour {
 	public Vector3 offset;
 	public float smoothTime, maxZoom, minZoom, zoomLimiter;
 
+	[Header("Camera Bounds")]
+	public bool boundDisable;
+	public float BoundsUp;
+	public float BoundsDown, BoundsLeft, BoundsRight;
+
 	private Vector3 velocity;
 
 	[Header("Shake Parameters")]
@@ -41,6 +46,21 @@ public class Camera_Controller : MonoBehaviour {
 		Vector3 centerPoint = GetCenterPoint();
 		Vector3 newPosition = centerPoint + offset;
 		transform.position = Vector3.SmoothDamp(transform.position, newPosition, ref velocity, smoothTime);
+
+		if(!boundDisable){
+		if(transform.position.x > BoundsRight){
+			transform.position = new Vector3(BoundsRight, transform.position.y, transform.position.z);
+		}
+		if(transform.position.x < BoundsLeft){
+			transform.position = new Vector3(BoundsLeft, transform.position.y, transform.position.z);
+		}
+		if(transform.position.y < BoundsDown){
+			transform.position = new Vector3(transform.position.x, BoundsDown, transform.position.z);
+		}
+		if(transform.position.y > BoundsUp){
+			transform.position = new Vector3(transform.position.x, BoundsUp, transform.position.z);
+		}
+		}
 
 	}
 

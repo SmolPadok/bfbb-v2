@@ -32,4 +32,18 @@ public class Character_ID : ScriptableObject {
 	[Header("UI")]
 	public Sprite icon = null;
 
+	[Header("Tranform follower objects")]
+	public Vector3 indicatorOffset = Vector3.zero;
+	public Vector3 blockOffset = Vector3.zero;
+	public Vector3 blockResize = new Vector3(1f,1f,1f);
+
+	[Header("Audio")]
+	public AudioClip[] jumpSounds;
+	public AudioClip[] hurtlightSounds;
+	public AudioClip[] hurtheavySounds;
+	public AudioClip[] attackSounds;
+	public AudioClip[] specialSounds;
+	public AudioClip[] deathSounds;
+	public AudioClip[] blockSounds;
+
 }

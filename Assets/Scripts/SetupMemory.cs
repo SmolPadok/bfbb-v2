@@ -5,13 +5,14 @@ using UnityEngine;
 public class SetupMemory : MonoBehaviour {
 
 	public bool[] playerActive = new bool[4];
-	SetupConfiguration setup;
+	public bool[] disableControl = new bool[4];
+	public float lives;
+	public SetupConfiguration setup;
 
 	// Use this for initialization
-	void Start () {
+	void Awake () {
 		
 		DontDestroyOnLoad(gameObject);
-		setup = GameObject.FindGameObjectWithTag("Setup").GetComponent<SetupConfiguration>();
 
 	}
 	
@@ -22,7 +23,9 @@ public class SetupMemory : MonoBehaviour {
 	for (int i = 0; i < playerActive.Length; i++)
 	{
 		playerActive[i] = setup.playerActive[i];
+		disableControl[i] = setup.disableControl[i];
 	}
-		
+	lives = setup.lives;
+	
 	}
 }

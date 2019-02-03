@@ -14,7 +14,7 @@ public class Player_Controller : MonoBehaviour {
     GameObject attackTrigger;
     public GameObject stat, indicator;
     BoxCollider trigger;
-    GameObject parent, dashParticle, diveParticle, impactParticle, lavaSplash;
+    GameObject parent, dashParticle, diveParticle, impactParticle, lavaSplash, blockBubble;
     public GameObject deathConfetti;
     public Transform effectStash;
     Camera_Controller cam;
@@ -22,9 +22,9 @@ public class Player_Controller : MonoBehaviour {
     float stunChance;
     public float damage = 0;
 
-	bool jumped;
+	bool jumped, doublejumped, blocking, holdStance;
     bool dived;
-    bool mobility = true;
+    public bool mobility = true;
     public bool flipped;
     bool limitMove;
     bool dashed;
@@ -35,13 +35,20 @@ public class Player_Controller : MonoBehaviour {
 	CapsuleCollider playerCollider;
 	Vector3 moveDirection;
     Animator anim;
+    AudioSource sound;
+    Vector3 impactForce;
+    float impactX, impactY, impactZ;
 
-    string[] inputs = {"Horizontal","Vertical","Attack","Special"};
+    string[] inputs = {"Horizontal","Vertical","Attack","Special", "Block"};
 
 	//FLIPPED = FACING RIGHT
 
 	void Awake () {
-		
+		InitializeVariables();
+	}
+
+    void InitializeVariables(){
+        
         manager = GameObject.Find("GameManager").GetComponent<GameManager>();
         cam = GameObject.Find("Main Camera").GetComponent<Camera_Controller>();
 		rb = GetComponent<Rigidbody>();
@@ -54,29 +61,23 @@ public class Player_Controller : MonoBehaviour {
         effectStash = parent.transform.Find("EffectsStash");
         dashParticle = parent.transform.Find("DashSmoke").gameObject;
         diveParticle = parent.transform.Find("DiveSmoke").gameObject;
+        blockBubble = parent.transform.Find("BlockBubble" + playerNumber).gameObject;
         impactParticle = parent.transform.Find("ImpactDebris").gameObject;
         lavaSplash = parent.transform.Find("LavaSplash").gameObject;
         deathConfetti = parent.transform.Find("DeathConfetti").gameObject;
-
-        if(playerNumber == 1){
-		stat = GameObject.Find("Stats1");
-        indicator = GameObject.Find("Indicator1");
-        }else if(playerNumber == 2){
-		stat = GameObject.Find("Stats2");
-        indicator = GameObject.Find("Indicator2");
-        }else if(playerNumber == 3){
-		stat = GameObject.Find("Stats3");
-        indicator = GameObject.Find("Indicator3");
-        }else if(playerNumber == 4){
-		stat = GameObject.Find("Stats4");
-        indicator = GameObject.Find("Indicator4");
-        }
+        stat = GameObject.Find("Stats" + playerNumber);
+        indicator = GameObject.Find("Indicator" + playerNumber);
+        indicator.GetComponent<Follow_Player>().offset = characterID.indicatorOffset;
+        blockBubble.GetComponent<Block_Controller>().playerRef = transform;
+        blockBubble.GetComponent<Follow_Player>().offset = characterID.blockOffset;
+        blockBubble.transform.localScale = characterID.blockResize;
+        sound = GetComponent<AudioSource>();
 
         for (int i = 0; i < inputs.Length; i++)
         {
             inputs[i] = inputs[i] + playerNumber.ToString();
         }
-	}
+    }
 
 	void Start(){
 
@@ -92,13 +93,16 @@ public class Player_Controller : MonoBehaviour {
 
 		if(characterID == null){
 
-			Debug.Log("No CharacterID you dummy!");
+			Debug.LogError("No CharacterID you dummy!");
             return;
 		}
         //--------------------------
         if(mobility && !debugDisable){
 
         float horizontalMovement = Input.GetAxis(inputs[0]);
+        if(holdStance){
+            horizontalMovement = 0f;
+        }
 
         if (limitMove == false)
         {
@@ -143,11 +147,12 @@ public class Player_Controller : MonoBehaviour {
         anim.SetInteger("MoveHorizontal", Mathf.RoundToInt(horizontalMovement));
 
         //--------------------------
-
+        if(mobility){
         if(horizontalMovement < 0f){
             flipped = false;
         }else if (horizontalMovement > 0f){
             flipped = true;
+        }
         }
 
         //--------------------------
@@ -156,10 +161,6 @@ public class Player_Controller : MonoBehaviour {
             sprite.flipX = true;
         }else{
             sprite.flipX = false;
-        }
-
-		if (Input.GetAxisRaw(inputs[1]) > 0){
-			Jump();
         }
 
         //--------------------------
@@ -175,23 +176,36 @@ public class Player_Controller : MonoBehaviour {
         {
             Special();
         }
+        if(Input.GetButtonDown(inputs[4]))
+        {
+            Block();
+        }
+        if(Input.GetButtonUp(inputs[4]))
+        {
+            UnBlock();
+        }
 
-        if(Input.GetAxisRaw(inputs[1]) < 0){
-            Duck();
+        if(Input.GetButtonDown(inputs[1])){
+            if(Input.GetAxisRaw(inputs[1]) > 0){
+                Jump();
+            }else if(Input.GetAxisRaw(inputs[1]) < 0){
+                Duck();
+            }
         }
 
         }
 
+        if(impactForce.x > 0f || impactForce.x < 0f || impactForce.y > 0f){
+            impactForce.x = Mathf.SmoothDamp(impactForce.x, 0f, ref impactX, 0.2f);
+            impactForce.y = Mathf.SmoothDamp(impactForce.y, 0f, ref impactY, 0.2f);
+        }
 
 
 	}
 
 	void FixedUpdate () {
 
-        if(mobility){
 		Move();
-        }
-        
 
 	}
 
@@ -199,18 +213,37 @@ public class Player_Controller : MonoBehaviour {
 
         Vector3 VelFix = new Vector3(rb.velocity.x / 2, rb.velocity.y, 0f);
         rb.velocity = moveDirection * characterID.speed * Time.deltaTime;
-        rb.velocity += VelFix;
+        rb.velocity += VelFix + impactForce;
 
 	}
 
 	void Jump(){
 
-		if(!jumped){
-			rb.AddForce(Vector3.up * characterID.jumpPower, ForceMode.Impulse);
-			jumped = true;
-            anim.SetTrigger("Jump");
-            anim.SetBool("Grounded", false);
-		}
+        if(!holdStance){
+		    if(!jumped){
+
+                Debug.Log("Jumped");
+		    	jumped = true;
+                doublejumped = false;
+                rb.velocity = Vector3.zero;
+		    	rb.AddForce(Vector3.up * characterID.jumpPower, ForceMode.Impulse);
+                anim.SetTrigger("Jump");
+                anim.SetBool("Grounded", false);
+                PlayLocalSound("jump", false);
+                return;
+
+		    }else if (!doublejumped){
+                Debug.Log("Double Jumped");
+                jumped = true;
+                doublejumped = true;
+                rb.velocity = Vector3.zero;
+		    	rb.AddForce(Vector3.up * characterID.jumpPower, ForceMode.Impulse);
+                anim.SetTrigger("DoubleJump");
+                anim.SetBool("Grounded", false);
+                PlayLocalSound("jump", false);
+                return;
+            }
+        }
 
 	}
 
@@ -224,6 +257,22 @@ public class Player_Controller : MonoBehaviour {
     {
 
         anim.SetTrigger("Special");
+
+    }
+
+    void Block(){
+        if(!jumped && blockBubble.GetComponent<Block_Controller>().currentCooldown > 3f){
+        holdStance = true;
+        blockBubble.GetComponent<Block_Controller>().isBlocking = true;
+        PlayLocalSound("block", false);
+        }
+
+    }
+    void UnBlock(){
+
+        holdStance = false;
+        blockBubble.GetComponent<Block_Controller>().isBlocking = false;
+        blockBubble.GetComponent<Block_Controller>().anim.SetTrigger("Exit");
 
     }
 
@@ -250,6 +299,7 @@ public class Player_Controller : MonoBehaviour {
 	void OnCollisionEnter(Collision c){
         
         jumped = false;
+        doublejumped = false;
         dived = false;
         anim.SetBool("Grounded", true);
 
@@ -275,7 +325,6 @@ public class Player_Controller : MonoBehaviour {
             LavaSplash.SetActive(true);
 
             manager.HazardDeath(this);
-            gameObject.SetActive(false);
 
         }
 
@@ -317,6 +366,7 @@ public class Player_Controller : MonoBehaviour {
 
         attackTrigger.GetComponent<AttackTriggerController>().heavy = false;
         trigger.enabled = true;
+        PlayLocalSound("attack", true);
 
     }
 
@@ -330,6 +380,7 @@ public class Player_Controller : MonoBehaviour {
 
         attackTrigger.GetComponent<AttackTriggerController>().heavy = true;
         trigger.enabled = true;
+        PlayLocalSound("special", true);
 
     }
 
@@ -337,6 +388,9 @@ public class Player_Controller : MonoBehaviour {
 
         float damageDone = damage / 50;
         float multiplyBySpeed = (Mathf.Abs(velX) + Mathf.Abs(velY) / 2) / 10;
+        if(multiplyBySpeed < 1f){
+            multiplyBySpeed = 1f;
+        }
         Debug.Log("This is Player " + attackingPlayerNumber + " attacking Player " + playerNumber + ". Damage done = " + damageDone + ", Multiply by speed: " + multiplyBySpeed);
 
         if(!heavy){
@@ -365,23 +419,33 @@ public class Player_Controller : MonoBehaviour {
             anim.SetBool("Grounded", false);
             anim.SetTrigger("Stun");
             mobility = false;
+            PlayLocalSound("hurtheavy", true);
+            PlayGlobalSound("hitheavy");
         }else{
             anim.SetTrigger("Hurt");
+            PlayLocalSound("hurtlight", true);
+            PlayGlobalSound("hitlight");
         }
         }else{
             anim.SetBool("Grounded", false);
             anim.SetTrigger("Stun");
             mobility = false;
+            PlayLocalSound("hurtheavy", true);
+            PlayGlobalSound("hitheavy");
         }
 
         if(flipped){
-            rb.AddForce(new Vector3(1f,0.5f,0f) * knockback * damageDone * multiplyBySpeed, ForceMode.Impulse);
+            impactForce = new Vector3(1f,0.1f,0f) * knockback * damageDone * multiplyBySpeed;
         }else{
-            rb.AddForce(new Vector3(-1f,0.5f,0f) * knockback * damageDone * multiplyBySpeed, ForceMode.Impulse);
+            impactForce = new Vector3(-1f,0.1f,0f) * knockback * damageDone * multiplyBySpeed;
         }
-
         manager.UpdateDamage(playerNumber);
 
+    }
+    public void BlockStun(){
+        anim.SetTrigger("Stun");
+        mobility = false;
+        PlayLocalSound("hurtheavy", true);
     }
 
     IEnumerator DashPeriod(){
@@ -391,4 +455,48 @@ public class Player_Controller : MonoBehaviour {
         dashed = false;
 
     }
+
+    public void PlayLocalSound(string type, bool silentChance){
+        //Sound from Character_ID
+        type = type + "Sounds";
+        AudioClip[] soundType = (AudioClip[])characterID.GetType().GetField(type).GetValue(characterID);
+        if(soundType.Length == 0){
+            Debug.LogWarning("Requested soundType is empty. You are looking for: " + type + ". Check if this is the correct type or add some sound files.");
+            return;
+        }else{
+
+            int selectRandom;
+
+            if(silentChance){
+            selectRandom = Random.Range(-1,soundType.Length);
+            }else{
+            selectRandom = Random.Range(0,soundType.Length);
+            }
+
+            if(selectRandom == -1){
+            return;
+            }else{
+            AudioClip pickedSound = soundType[selectRandom];
+            sound.PlayOneShot(pickedSound);
+            }
+        }
+    }
+    void PlayGlobalSound(string type){
+        //Sound from Game Manager
+        type = type + "Sounds";
+        AudioClip[] soundType = (AudioClip[])manager.GetType().GetField(type).GetValue(manager);
+        if(soundType.Length == 0){
+            Debug.LogWarning("Requested soundType is empty. You are looking for: " + type + ". Check if this is the correct type or add some sound files.");
+            return;
+        }else{
+
+            int selectRandom;
+
+            selectRandom = Random.Range(0,soundType.Length);
+
+            AudioClip pickedSound = soundType[selectRandom];
+            sound.PlayOneShot(pickedSound);
+        }
+    }
+
 }
