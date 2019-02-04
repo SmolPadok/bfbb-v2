@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 394834961}
-  m_IndirectSpecularColor: {r: 0.18257573, g: 0.22543056, b: 0.2906098, a: 1}
+  m_IndirectSpecularColor: {r: 0.18256107, g: 0.22541504, b: 0.2906008, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -172,6 +172,7 @@ MonoBehaviour:
   deathConfetti: {fileID: 0}
   effectStash: {fileID: 0}
   damage: 0
+  blocking: 0
   mobility: 1
   flipped: 0
   debugDisable: 0
@@ -2833,6 +2834,7 @@ MonoBehaviour:
   deathConfetti: {fileID: 0}
   effectStash: {fileID: 0}
   damage: 0
+  blocking: 0
   mobility: 1
   flipped: 0
   debugDisable: 0
@@ -4290,6 +4292,7 @@ MonoBehaviour:
   deathConfetti: {fileID: 0}
   effectStash: {fileID: 0}
   damage: 0
+  blocking: 0
   mobility: 1
   flipped: 0
   debugDisable: 0
@@ -4950,6 +4953,7 @@ MonoBehaviour:
   deathConfetti: {fileID: 0}
   effectStash: {fileID: 0}
   damage: 0
+  blocking: 0
   mobility: 1
   flipped: 0
   debugDisable: 0

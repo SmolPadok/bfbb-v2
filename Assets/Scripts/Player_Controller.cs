@@ -22,7 +22,8 @@ public class Player_Controller : MonoBehaviour {
     float stunChance;
     public float damage = 0;
 
-	bool jumped, doublejumped, blocking, holdStance;
+	bool jumped, doublejumped;
+    public bool blocking;
     bool dived;
     public bool mobility = true;
     public bool flipped;
@@ -100,9 +101,6 @@ public class Player_Controller : MonoBehaviour {
         if(mobility && !debugDisable){
 
         float horizontalMovement = Input.GetAxis(inputs[0]);
-        if(holdStance){
-            horizontalMovement = 0f;
-        }
 
         if (limitMove == false)
         {
@@ -176,9 +174,11 @@ public class Player_Controller : MonoBehaviour {
         {
             Special();
         }
-        if(Input.GetButtonDown(inputs[4]))
+        if(Input.GetButton(inputs[4]))
         {
+            if(!blocking){
             Block();
+            }
         }
         if(Input.GetButtonUp(inputs[4]))
         {
@@ -219,7 +219,7 @@ public class Player_Controller : MonoBehaviour {
 
 	void Jump(){
 
-        if(!holdStance){
+        if(mobility){
 		    if(!jumped){
 
                 Debug.Log("Jumped");
@@ -262,18 +262,23 @@ public class Player_Controller : MonoBehaviour {
 
     void Block(){
         if(!jumped && blockBubble.GetComponent<Block_Controller>().currentCooldown > 3f){
-        holdStance = true;
-        blockBubble.GetComponent<Block_Controller>().isBlocking = true;
+        mobility = false;
+        blocking = true;
         PlayLocalSound("block", false);
         }
 
     }
-    void UnBlock(){
+    public void UnBlock(){
 
-        holdStance = false;
-        blockBubble.GetComponent<Block_Controller>().isBlocking = false;
+        mobility = true;
+        blocking = false;
         blockBubble.GetComponent<Block_Controller>().anim.SetTrigger("Exit");
 
+    }
+    public void BlockStun(){
+        anim.SetTrigger("Stun");
+        mobility = false;
+        PlayLocalSound("hurtheavy", true);
     }
 
     void Duck(){
@@ -385,7 +390,7 @@ public class Player_Controller : MonoBehaviour {
     }
 
     void Hurt(bool heavy, bool flipped, float velX, float velY, int attackingPlayerNumber){
-
+    if(!blocking){
         float damageDone = damage / 50;
         float multiplyBySpeed = (Mathf.Abs(velX) + Mathf.Abs(velY) / 2) / 10;
         if(multiplyBySpeed < 1f){
@@ -441,11 +446,11 @@ public class Player_Controller : MonoBehaviour {
         }
         manager.UpdateDamage(playerNumber);
 
+    }else{
+        impactForce = Vector3.zero;
+        blockBubble.GetComponent<Block_Controller>().Damaged();
     }
-    public void BlockStun(){
-        anim.SetTrigger("Stun");
-        mobility = false;
-        PlayLocalSound("hurtheavy", true);
+
     }
 
     IEnumerator DashPeriod(){

@@ -9,21 +9,22 @@ public class Block_Controller : MonoBehaviour
     public Animator anim;
     public Transform playerRef;
     public float currentCooldown, maxCooldown;
+    Vector3 mainScale;
 
     void Start(){
         sprite = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
+        mainScale = transform.localScale;
     }
     void Update()
     {
-
+        isBlocking = playerRef.GetComponent<Player_Controller>().blocking;
         if(isBlocking){
             sprite.enabled = true;
             anim.enabled = true;
             currentCooldown -= Time.deltaTime;
             if(currentCooldown < 0){
-                isBlocking = false;
-                anim.SetTrigger("Exit");
+                playerRef.GetComponent<Player_Controller>().UnBlock();
                 playerRef.gameObject.GetComponent<Player_Controller>().BlockStun();
             }
         }else{
@@ -31,6 +32,9 @@ public class Block_Controller : MonoBehaviour
             currentCooldown += Time.deltaTime;
             }
         }
+    }
+    public void Damaged(){
+        anim.SetTrigger("Damaged");
     }
 
     public void endBlock(){
