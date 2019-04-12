@@ -9,7 +9,7 @@ AnimatorController:
   m_Name: Logo
   serializedVersion: 5
   m_AnimatorParameters:
-  - m_Name: End
+  - m_Name: Startup->Menu
     m_Type: 9
     m_DefaultFloat: 0
     m_DefaultInt: 0
@@ -37,7 +37,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: End
+    m_ConditionEvent: Startup->Menu
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 1102979591331993112}
@@ -60,7 +60,7 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: LogoStart
+  m_Name: Startup
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions:
@@ -87,7 +87,7 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: LogoEnd
+  m_Name: Menu
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions: []

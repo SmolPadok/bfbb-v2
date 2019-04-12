@@ -8,11 +8,17 @@ public class MainMenu_Controller : MonoBehaviour {
 	GameObject canvas;
 	GameObject transition;
 	GameObject cam;
-	GameObject changelog;
+	GameObject changelogPanel;
 	GameObject logo;
 	GameObject betaSetup;
-	GameObject playButton;
+	GameObject battleButton;
+	GameObject optionsButton;
+	GameObject creditsButton;
+	GameObject exitButton;
+	GameObject maindescriptionText;
+	GameObject pressanybuttonText;
 	SetupMemory setupMem;
+	bool startup = true;
 
 	void Awake(){
 
@@ -21,9 +27,14 @@ public class MainMenu_Controller : MonoBehaviour {
 		cam = GameObject.Find("Main Camera");
 		betaSetup = GameObject.FindGameObjectWithTag("Setup");
 		setupMem = GameObject.FindGameObjectWithTag("SetupMemory").GetComponent<SetupMemory>();
-		changelog = canvas.transform.Find("Changelog").gameObject;
+		changelogPanel = canvas.transform.Find("ChangelogPanel").gameObject;
 		logo = canvas.transform.Find("Logo").gameObject;
-		playButton = canvas.transform.Find("PlayButton").gameObject;
+		battleButton = canvas.transform.Find("BattleButton").gameObject;
+		optionsButton = canvas.transform.Find("OptionsButton").gameObject;
+		creditsButton = canvas.transform.Find("CreditsButton").gameObject;
+		exitButton = canvas.transform.Find("ExitButton").gameObject;
+		pressanybuttonText = canvas.transform.Find("PressAnyButton").gameObject;
+		maindescriptionText = canvas.transform.Find("MainDescription").gameObject;
 		setupMem.setup = betaSetup.GetComponent<SetupConfiguration>();
 		GameObject oldSetupMem = GameObject.FindGameObjectWithTag("OldSetupMemory");
 		if(oldSetupMem != null){
@@ -31,14 +42,34 @@ public class MainMenu_Controller : MonoBehaviour {
 		}
 		
 		betaSetup.SetActive(false);
+		battleButton.SetActive(false);
+		optionsButton.SetActive(false);
+		creditsButton.SetActive(false);
+		exitButton.SetActive(false);
+		changelogPanel.SetActive(false);
+		pressanybuttonText.SetActive(true);
+		maindescriptionText.SetActive(false);
 
 
 	}
+	void Update(){
+		if(Input.anyKeyDown && startup){
+			startup = false;
+			logo.GetComponent<Animator>().SetTrigger("Startup->Menu");
+			pressanybuttonText.SetActive(false);
+			battleButton.SetActive(true);
+			optionsButton.SetActive(true);
+			creditsButton.SetActive(true);
+			exitButton.SetActive(true);
+			changelogPanel.SetActive(true);
+			maindescriptionText.SetActive(true);
+		}
+	}
 	public void BetaSetup(){
-		changelog.GetComponent<Animator>().SetTrigger("End");
+		changelogPanel.GetComponent<Animator>().SetTrigger("End");
 		logo.GetComponent<Animator>().SetTrigger("End");
 		betaSetup.SetActive(true);
-		playButton.SetActive(false);
+		battleButton.SetActive(false);
 	}
 
 	public void LoadScene(string sceneName){

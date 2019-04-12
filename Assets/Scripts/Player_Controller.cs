@@ -20,7 +20,7 @@ public class Player_Controller : MonoBehaviour {
     Camera_Controller cam;
     float knockback = 20;
     float stunChance;
-    public float damage = 0;
+    public float damagePercent = 0;
 
 	bool jumped, doublejumped;
     public bool blocking;
@@ -195,9 +195,11 @@ public class Player_Controller : MonoBehaviour {
 
         }
 
-        if(impactForce.x > 0f || impactForce.x < 0f || impactForce.y > 0f){
-            impactForce.x = Mathf.SmoothDamp(impactForce.x, 0f, ref impactX, 0.2f);
-            impactForce.y = Mathf.SmoothDamp(impactForce.y, 0f, ref impactY, 0.2f);
+        if(impactForce.x != 0f){
+            impactForce.x = Mathf.SmoothDamp(impactForce.x, 0f, ref impactX, 0.3f);
+        }
+        if(impactForce.y != 0f){
+            impactForce.y = Mathf.SmoothDamp(impactForce.y, 0f, ref impactY, 0.3f);
         }
 
 
@@ -391,32 +393,31 @@ public class Player_Controller : MonoBehaviour {
 
     void Hurt(bool heavy, bool flipped, float velX, float velY, int attackingPlayerNumber){
     if(!blocking){
-        float damageDone = damage / 50;
+        float damageDone = 0f;
         float multiplyBySpeed = (Mathf.Abs(velX) + Mathf.Abs(velY) / 2) / 10;
-        if(multiplyBySpeed < 1f){
-            multiplyBySpeed = 1f;
-        }
-        Debug.Log("This is Player " + attackingPlayerNumber + " attacking Player " + playerNumber + ". Damage done = " + damageDone + ", Multiply by speed: " + multiplyBySpeed);
-
-        if(!heavy){
-        cam.SmolShake();
-        damage += (1f + multiplyBySpeed);
-        stunChance = 1;
-        }else{
-        cam.BigShaq();
-        damage += (2f + multiplyBySpeed);
-        stunChance = 30;
-        }
 
         if(multiplyBySpeed < 1){
         if(!heavy){
-            multiplyBySpeed = 0.5f;
+            multiplyBySpeed = 0.1f;
         }else{
             multiplyBySpeed = 1f;
         }
         }
+        multiplyBySpeed = Mathf.Clamp(multiplyBySpeed, 0f, 1.5f);
+        if(!heavy){
+        cam.SmolShake();
+        damagePercent += (1f + multiplyBySpeed);
+        stunChance = 1;
+        }else{
+        cam.BigShaq();
+        damagePercent += (3f + multiplyBySpeed);
+        stunChance = 30;
+        }
 
-        stunChance += multiplyBySpeed + (damage / 10);
+
+        stunChance += multiplyBySpeed + (damagePercent / 10);
+        damageDone = damagePercent / 50f * multiplyBySpeed;
+        Debug.Log("This is Player " + attackingPlayerNumber + " attacking Player " + playerNumber + ". Damage done = " + damageDone + ", Multiply by speed: " + multiplyBySpeed);
 
         if(!jumped){
         float randomizeStun = Random.Range(0,100);
@@ -440,9 +441,9 @@ public class Player_Controller : MonoBehaviour {
         }
 
         if(flipped){
-            impactForce = new Vector3(1f,0.1f,0f) * knockback * damageDone * multiplyBySpeed;
+            impactForce = new Vector3(1f,0.1f,0f) * knockback * damageDone;
         }else{
-            impactForce = new Vector3(-1f,0.1f,0f) * knockback * damageDone * multiplyBySpeed;
+            impactForce = new Vector3(-1f,0.1f,0f) * knockback * damageDone;
         }
         manager.UpdateDamage(playerNumber);
 

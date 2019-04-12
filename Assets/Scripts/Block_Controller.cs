@@ -19,6 +19,8 @@ public class Block_Controller : MonoBehaviour
     void Update()
     {
         isBlocking = playerRef.GetComponent<Player_Controller>().blocking;
+        float clamp = Mathf.Clamp(currentCooldown, 0f, maxCooldown);
+        transform.localScale = mainScale * (clamp/maxCooldown);
         if(isBlocking){
             sprite.enabled = true;
             anim.enabled = true;

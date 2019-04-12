@@ -21,3 +21,7 @@ MonoBehaviour:
   - {x: 27.5, y: 10, z: 0}
   gravity: -36
   music: {fileID: 8300000, guid: a88fe3a10532145b2a83b87b346781ff, type: 3}
+  boundsUp: 45
+  boundsDown: -15
+  boundsLeft: -50
+  boundsRight: 50

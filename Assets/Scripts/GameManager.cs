@@ -196,6 +196,10 @@ public class GameManager : MonoBehaviour {
 
 		}
 		setLives = (int)setup.lives;
+		boundsUp = battleSceneID.boundsUp;
+		boundsDown = battleSceneID.boundsDown;
+		boundsLeft = battleSceneID.boundsLeft;
+		boundsRight = battleSceneID.boundsRight;
 
 		}else{
 		Debug.Log("No setup memory found. Using pre-assigned settings.");
@@ -308,7 +312,7 @@ public class GameManager : MonoBehaviour {
 		yield return new WaitForSeconds(2f);
 
 		playerDamage[index] = 0;
-		playerControl[index].damage = 0;
+		playerControl[index].damagePercent = 0;
 		players[index].transform.position = new Vector3(Random.Range(-5f,5f), 30f, 0f);
 		players[index].GetComponent<Rigidbody>().velocity = Vector3.zero;
 		VisiblePlayerOnRespawn(index);
@@ -415,7 +419,7 @@ public class GameManager : MonoBehaviour {
 		for (int i = 0; i < players.Length; i++)
 		{
 			if(playerIndex == (i + 1)){
-				playerDamage[i] = Mathf.Round(playerControl[i].damage * 10) / 10;
+				playerDamage[i] = Mathf.Round(playerControl[i].damagePercent * 10) / 10;
 				statDamage[i].GetComponent<Animator>().SetTrigger("Hit");
 				statDamage[i].GetComponent<Animator>().SetFloat("Damage", playerDamage[i]);
 				break;
